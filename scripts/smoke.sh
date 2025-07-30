@@ -53,7 +53,7 @@ function main() {
   fi
 
   if [[ -z "${name:-}" ]]; then
-    name="testbuilder"
+    name="testbuilder-buildpackless"
   fi
 
   tools::install "${token}"
@@ -123,7 +123,7 @@ function builder::create() {
   local name
   name="${1}"
 
-  util::print::title "Creating builder..."
+  util::print::title "Creating buildpackless builder..."
   pack builder create "${name}" --config "${BUILDERDIR}/builder-buildpackless.toml"
 }
 

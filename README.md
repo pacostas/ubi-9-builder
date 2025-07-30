@@ -2,7 +2,7 @@
 
 ## Paketo UBI 9 Buildpackless Builder
 
-## `paketobuildpacks/ubi-9-buildpackless-builder`
+## `paketobuildpacks/ubi-9-builder-buildpackless`
 
 This builder uses the [UBI 9 Base images](https://github.com/paketo-buildpacks/ubi-9-base-images) (a Red Hat UBI 9 base images) and contains **no buildpacks nor order groups**.
 To use this builder, you must specify buildpacks and extensions at build time using whatever mechanisms your CNB platform of choice offers.
@@ -14,7 +14,7 @@ pack build nodejs-with-buildpackless-builder \
            --path ./app-dir \
            --buildpack paketobuildpacks/nodejs \
            --extension paketobuildpacks/ubi-nodejs-extension \
-           --builder paketobuildpacks/ubi-9-buildpackless-builder
+           --builder paketobuildpacks/ubi-9-builder-buildpackless
 ```
 
 To see which versions of build and run images and the lifecycle are contained within a given builder version, see the [Releases](https://github.com/paketo-buildpacks/ubi-9-builder/releases) on this repo. This information is also available in the `builder.toml`.
