@@ -5,47 +5,53 @@ on:
     types:
     - published
 
+env:
+  BUILDERS_FILEPATH: "builders.json"
+
 jobs:
-  push:
-    name: Push
+  preparation:
+    name: Preparation
     runs-on: ubuntu-24.04
+    outputs:
+      builders: ${{ steps.get-builders.outputs.builders }}
+      tag: ${{ steps.event.outputs.tag }}
+      pack_version: ${{ steps.pack-version.outputs.version }}
     steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+      # TODO: Add the image re on the buiders.json default
+    - name: Get Builders
+      id: get-builders
+      run: |
+        if [ -f ${{ env.BUILDERS_FILEPATH }} ]; then
+          builders=$(jq -c '[.builders[] ]' ${{ env.BUILDERS_FILEPATH }} | jq -c '.[]')
+        else
+          builders=$(jq -n -c '[
+              {
+                "name": "default",
+                "path": ".",
+              }
+            ]' | jq -c '.[]')
+        fi
+        echo "builders=${builders}" >> "$GITHUB_OUTPUT"
 
     - name: Parse Event
       id: event
       run: |
         echo "tag=$(jq -r '.release.tag_name' "${GITHUB_EVENT_PATH}" | sed s/^v//)" >> "$GITHUB_OUTPUT"
 
+  push:
+    name: Push
+    needs: preparation
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        builders: ${{ fromJSON(needs.preparation.outputs.builders) }}
+    steps:
+
     - name: Checkout
       uses: actions/checkout@v4
-
-    - name: Get pack version
-      id: pack-version
-      run: |
-        version=$(jq -r .pack "scripts/.util/tools.json")
-        echo "version=${version#v}" >> "$GITHUB_OUTPUT"
-
-    - name: Install Global Pack
-      uses: buildpacks/github-actions/setup-pack@main
-      with:
-        pack-version: ${{ steps.pack-version.outputs.version }}
-
-
-    - name: Install crane
-      run: |
-        VERSION=$(curl -s "https://api.github.com/repos/google/go-containerregistry/releases/latest" | jq -r '.tag_name')
-        OS=Linux
-        ARCH=x86_64
-        curl -sL "https://github.com/google/go-containerregistry/releases/download/${VERSION}/go-containerregistry_${OS}_${ARCH}.tar.gz" > go-containerregistry.tar.gz
-
-        tar -zxvf go-containerregistry.tar.gz -C "${HOME}/bin" crane
-        chmod +x "${HOME}/bin/crane"
-
-    - name: Enable Experimental Pack Features
-      run: |
-        if [ -f "scripts/options.json" ] && jq -e -r .pack_config_enable_experimental "scripts/options.json" > /dev/null; then
-          pack config experimental true
-        fi
 
     - name: Create Builder Image and Push To Dockerhub
       env:
@@ -54,11 +60,14 @@ jobs:
         GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
       run: |
         DOCKERHUB_ORG="${GITHUB_REPOSITORY_OWNER/-/}" # translates 'paketo-buildpacks' to 'paketobuildpacks'
-        registry_repo="ubi-9-builder-buildpackless"
+        container_repository=${{ matrix.builders.container_repository }}
 
         echo "${PAKETO_BUILDPACKS_DOCKERHUB_PASSWORD}" | docker login --username "${PAKETO_BUILDPACKS_DOCKERHUB_USERNAME}" --password-stdin
-        pack builder create "${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}" --config builder-buildpackless.toml --publish
-        crane copy "${DOCKERHUB_ORG}/${registry_repo}:${{ steps.event.outputs.tag }}" "${DOCKERHUB_ORG}/${registry_repo}:latest"
+
+        ./scripts/publish.sh --builder-toml-path "${{ matrix.builders.path }}/builder.toml" \
+          --builder-image-ref "${DOCKERHUB_ORG}/${container_repository}:${{ needs.preparation.outputs.tag }}"
+
+        crane copy "${DOCKERHUB_ORG}/${container_repository}:${{ needs.preparation.outputs.tag }}" "${DOCKERHUB_ORG}/${container_repository}:latest"
 
   failure:
     name: Alert on Failure

@@ -1,0 +1,100 @@
+description = "Ubi 9 builder with buildpacks for Node.js, Java, Quarkus and Procfile"
+
+[[buildpacks]]
+  uri = "docker://docker.io/paketocommunity/ubi-java-buildpack:0.1.1"
+  version = "0.1.1"
+
+[[buildpacks]]
+  uri = "docker://docker.io/paketobuildpacks/quarkus:0.6.3"
+  version = "0.6.3"
+
+[[buildpacks]]
+  uri = "docker://docker.io/paketobuildpacks/java:18.13.0"
+  version = "18.13.0"
+
+[[buildpacks]]
+  uri = "docker://docker.io/paketobuildpacks/nodejs:9.6.0"
+  version = "9.6.0"
+
+[[buildpacks]]
+  uri = "docker://docker.io/paketobuildpacks/procfile:5.11.3"
+  version = "5.11.3"
+
+[[extensions]]
+  id = "paketo-community/ubi-java-extension"
+  uri = "docker://docker.io/paketocommunity/ubi-java-extension:0.2.0"
+  version = "0.2.0"
+
+[[extensions]]
+  id = "paketo-buildpacks/ubi-nodejs-extension"
+  uri = "docker://docker.io/paketobuildpacks/ubi-nodejs-extension:1.5.2"
+  version = "1.5.2"
+
+[lifecycle]
+  version = "0.20.14"
+
+[[order]]
+
+  [[order.group]]
+    id = "paketo-community/ubi-java-buildpack"
+    version = "0.1.1"
+
+  [[order.group]]
+    id = "paketo-buildpacks/quarkus"
+    optional = true
+    version = "0.6.3"
+
+  [[order.group]]
+    id = "paketo-buildpacks/java"
+    version = "18.13.0"
+
+[[order]]
+
+  [[order.group]]
+    id = "paketo-buildpacks/nodejs"
+    version = "9.6.0"
+
+[[order]]
+
+  [[order.group]]
+    id = "paketo-buildpacks/procfile"
+    version = "5.11.3"
+
+[[order-extensions]]
+
+  [[order-extensions.group]]
+    id = "paketo-community/ubi-java-extension"
+    version = "0.2.0"
+
+  [[order-extensions.group]]
+    id = "paketo-buildpacks/ubi-nodejs-extension"
+    version = "1.5.2"
+
+[build]
+  image = "docker.io/paketobuildpacks/build-ubi9-base:0.0.18"
+
+[run]
+
+  [[run.images]]
+    image = "docker.io/paketobuildpacks/run-ubi9-base:latest"
+
+
+[[targets]]
+  arch = "amd64"
+  os = "linux"
+
+[[targets]]
+  arch = "arm64"
+  os = "linux"
+
+[[targets]]
+  arch = "ppc64le"
+  os = "linux"
+
+[[targets]]
+  arch = "ppc64le"
+  os = "linux"
+
+[[targets]]
+  arch = "s390x"
+  os = "linux"
