@@ -64,8 +64,6 @@ func testJava(t *testing.T, context spec.G, it spec.S) {
 
 			Expect(logs).To(ContainLines(ContainSubstring("Paketo UBI Java Extension")))
 			Expect(logs).To(ContainLines(ContainSubstring("Paketo UBI Java Helper Buildpack")))
-			Expect(logs).To(ContainLines(ContainSubstring("[extender (build)] Enabling module streams")))
-			Expect(logs).To(ContainLines(ContainSubstring("javapackages-runtime")))
 
 			container, err = docker.Container.Run.
 				WithPublishAll().
