@@ -86,15 +86,3 @@ description = "Ubi 9 builder with buildpacks for Node.js, Java, Quarkus and Proc
 [[targets]]
   arch = "arm64"
   os = "linux"
-
-[[targets]]
-  arch = "ppc64le"
-  os = "linux"
-
-[[targets]]
-  arch = "ppc64le"
-  os = "linux"
-
-[[targets]]
-  arch = "s390x"
-  os = "linux"

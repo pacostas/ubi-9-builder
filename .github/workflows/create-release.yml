@@ -121,26 +121,21 @@ jobs:
 
     - name: Run Smoke Tests
       run: |
-        builder_name=${{ matrix.builders.name }}
-        pushd ${{ matrix.builders.path }}
-        ./scripts/smoke.sh --name "$builder_name"
-        popd
+        ./scripts/smoke.sh --builder-dir "${{ matrix.builders.path }}"
 
     - name: Generate Release Notes
       id: notes
       run: |
-        registry_builder_name=${{ matrix.builders.name }}
-        
-        ./scripts/publish.sh --builder-toml-path "$builder_path/builder-buildpack.toml" \
+        registry_builder_name=localhost:5000/${{ matrix.builders.name }}
+
+        ./scripts/publish.sh --builder-toml-path "${{ matrix.builders.path }}/builder.toml" \
           --builder-image-ref "${registry_builder_name}"
 
         pack inspect-builder $registry_builder_name | grep -v 'Inspecting builder' \
           | grep -v 'REMOTE:' \
           | grep -v 'LOCAL:' \
           | grep -v '\(not present\)' \
-          | grep -v 'Warning' \
-          | sed -e '/./,$!d' \
-          | awk -F, '{printf "%s\\n", $0}' > release-notes.md
+          | grep -v 'Warning' > release-notes.md
 
     - name: Upload release notes for ${{ matrix.builders.name }}
       uses: actions/upload-artifact@v4
