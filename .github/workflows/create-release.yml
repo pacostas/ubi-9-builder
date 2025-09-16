@@ -25,7 +25,6 @@ jobs:
       id: get-builders
       run: |
 
-        # Initialize empty array for builders
         builders=$(jq -n -c '[]')
   
         if [ -f ${{ env.BUILDERS_FILEPATH }} ]; then
