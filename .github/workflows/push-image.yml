@@ -4,6 +4,8 @@ on:
   release:
     types:
     - published
+  workflow_dispatch:
+
 
 env:
   BUILDERS_FILEPATH: "builders.json"
@@ -55,7 +57,7 @@ jobs:
     - name: Parse Event
       id: event
       run: |
-        echo "tag=$(jq -r '.release.tag_name' "${GITHUB_EVENT_PATH}" | sed s/^v//)" >> "$GITHUB_OUTPUT"
+        echo "tag=0.1.18" >> "$GITHUB_OUTPUT"
 
   push:
     name: Push
