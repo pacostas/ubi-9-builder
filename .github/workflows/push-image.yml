@@ -24,17 +24,33 @@ jobs:
     - name: Get Builders
       id: get-builders
       run: |
+        builders=$(jq -n -c '[]')
+
         if [ -f ${{ env.BUILDERS_FILEPATH }} ]; then
-          builders=$(jq -c '[.builders[] ]' ${{ env.BUILDERS_FILEPATH }} | jq -c '.[]')
+          builders=$(jq -c '.builders' ${{ env.BUILDERS_FILEPATH }})
         else
+          # Strip off the Github org prefix from repo name
+          # paketo-buildpacks/builder-with-some-name --> builder-with-some-name
+          registry_repo=$(echo "${{ github.repository }}" | sed 's/^.*\///')
           builders=$(jq -n -c '[
               {
                 "name": "default",
                 "path": ".",
+                "container_repository": "'"${registry_repo}"'"
               }
-            ]' | jq -c '.[]')
+            ]')
         fi
-        echo "builders=${builders}" >> "$GITHUB_OUTPUT"
+
+        # Filter only the necessary fields
+        builders=$(echo "$builders" | jq 'map({
+          name,
+          path,
+          container_repository
+        })')
+
+        builders=$(jq -c <<< "$builders")
+        echo "builders=$builders"
+        echo "builders=$builders" >> "$GITHUB_OUTPUT"
 
     - name: Parse Event
       id: event
