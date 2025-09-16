@@ -123,7 +123,7 @@ jobs:
       run: |
         ./scripts/smoke.sh --builder-dir "${{ matrix.builders.path }}"
 
-    - name: Generate Release Notes
+    - name: Generate builder information
       id: notes
       run: |
         registry_builder_name=localhost:5000/${{ matrix.builders.name }}
@@ -135,13 +135,13 @@ jobs:
           | grep -v 'REMOTE:' \
           | grep -v 'LOCAL:' \
           | grep -v '\(not present\)' \
-          | grep -v 'Warning' > "${{ matrix.builders.name }}-release-notes.md"
+          | grep -v 'Warning' > "${{ matrix.builders.name }}-information.md"
 
-    - name: Upload release notes for ${{ matrix.builders.name }}
+    - name: Upload information for ${{ matrix.builders.name }}
       uses: actions/upload-artifact@v4
       with:
-        name: "${{ matrix.builders.name }}-release-notes.md"
-        path: "${{ matrix.builders.name }}-release-notes.md"
+        name: "${{ matrix.builders.name }}-information.md"
+        path: "${{ matrix.builders.name }}-information.md"
 
   release:
     name: Release
@@ -156,13 +156,13 @@ jobs:
     - name: Download Release Note File(s)
       uses: actions/download-artifact@v4
       with:
-        path: release-notes
-        pattern: "*release-notes.md"
+        path: information
+        pattern: "*information.md"
         merge-multiple: true
 
     # Remove before PR
-    - name: Display Release Note Files
-      run: ls release-notes
+    - name: Display information Files
+      run: ls information
 
     - name: Generate Release Notes and Assets
       id: generate_release_notes_and_assets
@@ -171,7 +171,7 @@ jobs:
         shopt -s inherit_errexit
 
         builders=$(echo '${{ needs.preparation.outputs.builders }}' | jq -c '.[]')
-        release_notes_dir="release-notes"
+        release_notes_dir="information"
 
         # Start with an empty array
         assets=$(jq -n -c '[]')
@@ -185,9 +185,9 @@ jobs:
             --arg builder_name "${builder_name}" \
             '. += [
               {
-                "path": ($release_notes_dir + "/" + $builder_name + "-" + "release-notes.md"),
-                "name": ($builder_name + "-" + "release-notes.md"),
-                "content_type": "text/plain"
+                "path": ($release_notes_dir + "/" + $builder_name + "-" + "information.md"),
+                "name": ($builder_name + "-" + "information.md"),
+                "content_type": "text/markdown"
               }
             ]' <<<"${assets}")"
         done
@@ -195,7 +195,7 @@ jobs:
         echo "assets=${assets}" >> "$GITHUB_OUTPUT"
 
         # Remove before PR
-        echo "assets=${assets}" >> "$GITHUB_OUTPUT"
+        echo "assets=${assets}"
 
         # translates 'paketo-buildpacks' to 'paketobuildpacks'
         DOCKERHUB_ORG="${GITHUB_REPOSITORY_OWNER/-/}" 
@@ -225,7 +225,6 @@ jobs:
         shopt -s inherit_errexit
 
         payload='${{ steps.generate_release_notes_and_assets.outputs.release_body }}'
-        # Update release notes
         curl --fail \
           -X PATCH \
           -H "Accept: application/vnd.github.v3+json" \
@@ -245,17 +244,16 @@ jobs:
 
           echo "Uploading asset: ${name} from path: ${path}"
 
-          curl --fail \
+          curl -L \
             -X POST \
             -H "Accept: application/vnd.github.v3+json" \
             -H "Authorization: token ${GITHUB_TOKEN}" \
             -H "Content-Type: ${content_type}" \
-            "${UPLOAD_URL}?name=${name}" \
-            --data-binary @"${path}"
+            "https://uploads.github.com/repos/${GITHUB_REPOSITORY}/releases/${RELEASE_ID}/assets?name=${name}"
+            --data-binary "@${path}"
         done
       env:
         RELEASE_ID: ${{ steps.publish.outputs.id }}
-        UPLOAD_URL: ${{ steps.publish.outputs.upload_url }}
         GITHUB_TOKEN: ${{ secrets.PAKETO_BOT_GITHUB_TOKEN }}
 
   failure:
