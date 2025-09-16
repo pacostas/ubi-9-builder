@@ -186,7 +186,7 @@ jobs:
             --arg builder_name "${builder_name}" \
             '. += [
               {
-                "path": ($release_notes_dir + "/" + $builder_name + "-" + "release-notes"),
+                "path": ($release_notes_dir + "/" + $builder_name + "-" + "release-notes.md"),
                 "name": ($builder_name + "-" + "release-notes.md"),
                 "content_type": "text/plain"
               }
