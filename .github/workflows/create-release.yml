@@ -135,13 +135,13 @@ jobs:
           | grep -v 'REMOTE:' \
           | grep -v 'LOCAL:' \
           | grep -v '\(not present\)' \
-          | grep -v 'Warning' > release-notes.md
+          | grep -v 'Warning' > "${{ matrix.builders.name }}-release-notes.md"
 
     - name: Upload release notes for ${{ matrix.builders.name }}
       uses: actions/upload-artifact@v4
       with:
         name: "${{ matrix.builders.name }}-release-notes.md"
-        path: "release-notes.md"
+        path: "${{ matrix.builders.name }}-release-notes.md"
 
   release:
     name: Release
@@ -185,7 +185,7 @@ jobs:
             --arg builder_name "${builder_name}" \
             '. += [
               {
-                "path": ($release_notes_dir + "/" + $builder_name + "-" + "release-notes"),
+                "path": ($release_notes_dir + "/" + $builder_name + "-" + "release-notes.md"),
                 "name": ($builder_name + "-" + "release-notes.md"),
                 "content_type": "text/plain"
               }
@@ -207,7 +207,7 @@ jobs:
           release_body+="Builder: \`${DOCKERHUB_ORG}/${container_repository}\`\n"
         done
 
-        payload="{\"body\" : \"\`\`\`\n${release_body}\n\`\`\`\"}"
+        payload="{\"body\" : \"\n${release_body}\"}"
         echo "release_body=${payload}" >> "$GITHUB_OUTPUT"
 
     - name: Publish Release
