@@ -77,6 +77,11 @@ jobs:
         PAKETO_BUILDPACKS_DOCKERHUB_PASSWORD: ${{ secrets.PAKETO_BUILDPACKS_DOCKERHUB_PASSWORD }}
         GITHUB_REPOSITORY_OWNER: ${{ github.repository_owner }}
       run: |
+        # shellcheck source=./scripts/.util/tools.sh
+        source "./scripts/.util/tools.sh"
+
+        util::tools::crane::install --directory "./.bin"
+
         DOCKERHUB_ORG="${GITHUB_REPOSITORY_OWNER/-/}" # translates 'paketo-buildpacks' to 'paketobuildpacks'
         container_repository=${{ matrix.builders.container_repository }}
 
