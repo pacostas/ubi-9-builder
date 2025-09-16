@@ -3,23 +3,25 @@
 set -eu
 set -o pipefail
 
-readonly PROG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-readonly ROOT_DIR="$(cd "${PROG_DIR}/.." && pwd)"
+readonly PROGDIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+readonly ROOT_DIR="$(cd "${PROGDIR}/.." && pwd)"
 readonly BIN_DIR="${ROOT_DIR}/.bin"
 
 # shellcheck source=SCRIPTDIR/.util/tools.sh
-source "${PROG_DIR}/.util/tools.sh"
+source "${PROGDIR}/.util/tools.sh"
 
 # shellcheck source=SCRIPTDIR/.util/print.sh
-source "${PROG_DIR}/.util/print.sh"
+source "${PROGDIR}/.util/print.sh"
 
 if [[ $BASH_VERSINFO -lt 4 ]]; then
   util::print::error "Before running this script please update Bash to v4 or higher (e.g. on OSX: \$ brew install bash)"
 fi
 
 function main() {
+  local token
   local builder_toml_path=""
   local builder_image_ref=""
+  token=""
 
   while [[ "${#}" != 0 ]]; do
     case "${1}" in
@@ -36,6 +38,11 @@ function main() {
 
       --builder-image-ref)
         builder_image_ref=${2}
+        shift 2
+        ;;
+
+      --token|-t)
+        token="${2}"
         shift 2
         ;;
 
@@ -62,7 +69,7 @@ function main() {
     util::print::error "--builder-image-ref is required [Example: index.docker.io/username/builder:tag or localhost:5000/builder:tag]"
   fi
 
-  tools::install
+  tools::install "${token}"
 
   builder::publish "$builder_toml_path" "$builder_image_ref"
 }
@@ -77,26 +84,23 @@ publish.sh [OPTIONS]
 USAGE
 }
 
+function tools::install() {
+  local token
+  token="${1}"
+
+  util::tools::pack::install \
+    --directory "${PROGDIR}/.bin" \
+    --token "${token}"
+}
+
 function builder::publish() {
   local builder_toml_path="$1"
   local builder_image_ref="$2"
 
-  pack builder create "${builder_image_ref}" --config builder.toml --publish
-  pack builder create-builder builder --config "$builder_toml_path" --pull-policy if-not-present
-
-  # iterate over build_ref & run_ref, they will be the same length
-  local len=${#build_ref[@]}
-  for (( i=0; i<len; i++ )); do
-    local br="${build_ref[$i]}"
-    local rr="${run_ref[$i]}"
-    args=(
-      "--build-ref" "$br"
-      "--run-ref" "$rr"
-      "--build-archive" "$build_archive"
-      "--run-archive" "$run_archive"
-    )
-    jam publish-stack "${args[@]}"
-  done
+  util::print::title "Publishing builder image ${builder_image_ref} using builder config ${builder_toml_path}..."
+  pack builder create "${builder_image_ref}" \
+    --config "${builder_toml_path}" \
+    --publish
 }
 
 
