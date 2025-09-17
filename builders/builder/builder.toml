@@ -1,7 +1,7 @@
 description = "Ubi 9 builder with buildpacks for Node.js, Java,Quarkus and Procfile"
 
 [build]
-  image = "docker.io/paketobuildpacks/build-ubi9-base:0.0.28"
+  image = "docker.io/paketobuildpacks/build-ubi9-base:0.0.29"
 
 [[buildpacks]]
   uri = "docker://docker.io/paketocommunity/ubi-java-buildpack:0.1.1"
@@ -30,8 +30,8 @@ description = "Ubi 9 builder with buildpacks for Node.js, Java,Quarkus and Procf
 
 [[extensions]]
   id = "paketo-buildpacks/ubi-nodejs-extension"
-  uri = "docker://docker.io/paketobuildpacks/ubi-nodejs-extension:1.5.2"
-  version = "1.5.2"
+  uri = "docker://docker.io/paketobuildpacks/ubi-nodejs-extension:1.5.3"
+  version = "1.5.3"
 
 [lifecycle]
   version = "0.20.14"
@@ -71,7 +71,7 @@ description = "Ubi 9 builder with buildpacks for Node.js, Java,Quarkus and Procf
 
   [[order-extensions.group]]
     id = "paketo-buildpacks/ubi-nodejs-extension"
-    version = "1.5.2"
+    version = "1.5.3"
 
 [run]
 
