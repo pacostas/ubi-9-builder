@@ -8,7 +8,7 @@ on:
 concurrency: builder_update
 
 env:
-    BUILDERS_FILEPATH: "builders.json"
+  BUILDERS_FILEPATH: "builders.json"
 
 jobs:
   preparation:
@@ -23,9 +23,8 @@ jobs:
     - name: Get Builders
       id: get-builders
       run: |
-
         builders=$(jq -n -c '[]')
-  
+
         if [ -f ${{ env.BUILDERS_FILEPATH }} ]; then
           builders=$(jq -c '.builders' ${{ env.BUILDERS_FILEPATH }})
         else
@@ -51,7 +50,7 @@ jobs:
         builders=$(jq -c <<< "$builders")
         echo "builders=$builders"
         echo "builders=$builders" >> "$GITHUB_OUTPUT"
- 
+
   update:
     name: Update builder.toml
     runs-on: ubuntu-24.04
