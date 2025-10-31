@@ -54,6 +54,8 @@ jobs:
   update:
     name: Update builder.toml
     runs-on: ubuntu-24.04
+    outputs:
+      commit_sha: ${{ steps.commit.outputs.commit_sha }}
     needs: preparation
     strategy:
       matrix:
@@ -87,15 +89,22 @@ jobs:
       if: ${{ steps.commit.outputs.commit_sha != '' }}
       uses: paketo-buildpacks/github-config/actions/pull-request/push-branch@main
       with:
-        branch: "automation/${{ matrix.builders.name }}-builder-toml"
+        branch: "automation/builder-toml"
 
+    - name: Output commit sha
+      run: echo "commit_sha=${{ steps.commit.outputs.commit_sha }}" >> "$GITHUB_OUTPUT"
+  open-pull-request:
+    name: Open pull request
+    runs-on: ubuntu-24.04
+    needs: update
+    steps:
     - name: Open Pull Request
-      if: ${{ steps.commit.outputs.commit_sha != '' }}
+      if: ${{ needs.update.outputs.commit_sha != '' }}
       uses: paketo-buildpacks/github-config/actions/pull-request/open@main
       with:
         token: ${{ secrets.PAKETO_BOT_GITHUB_TOKEN }}
-        title: "Updating ${{ matrix.builders.name }} builder.toml"
-        branch: "automation/${{ matrix.builders.name }}-builder-toml"
+        title: "Updating builder.toml files"
+        branch: "automation/builder-toml"
 
   failure:
     name: Alert on Failure
